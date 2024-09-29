@@ -43,11 +43,11 @@ variable "subnet_id" {
 }
 
 variable "key_name" {
-  default = "tom-1-key"
+  default = "ansible-key"
 }
 
 variable "security_group_name" {
-  default = "Tom-SG"
+  default = "jenkins-SG"
 }
 
 # Security Group Configuration
