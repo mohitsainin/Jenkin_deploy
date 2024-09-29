@@ -1,7 +1,7 @@
 
 # Application Load Balancer
-resource "aws_lb" "tomcat_lb" {
-  name               = "tomcat-lb"
+resource "aws_lb" "jenkins_lb" {
+  name               = "jenkins-lb"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [var.security_group_id]
@@ -9,8 +9,8 @@ resource "aws_lb" "tomcat_lb" {
 }
 
 # Target Group for Private Instances
-resource "aws_lb_target_group" "tomcat_tg" {
-  name     = "tomcat-TG"
+resource "aws_lb_target_group" "jenkins_tg" {
+  name     = "jenkins-TG"
   port     = var.port
   protocol = "HTTP"
   vpc_id   = var.vpc_id
@@ -24,7 +24,7 @@ resource "aws_lb_listener" "alb" {
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.tomcat_tg.arn
+    target_group_arn = aws_lb_target_group.jenkins_tg.arn
   }
 }
 
