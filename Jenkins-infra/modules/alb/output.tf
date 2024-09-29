@@ -1,9 +1,9 @@
 output "load_balancer_id" {
-  value = aws_lb.tomcat_lb.id
+  value = aws_lb.jenkins_lb.id
 }
 
 output "target_group_arn" {
-  value = aws_lb_target_group.tomcat_tg.arn
+  value = aws_lb_jenkins_group.tomcat_tg.arn
 }
 
 output "listener_arn" {
