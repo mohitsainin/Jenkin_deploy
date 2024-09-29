@@ -1,5 +1,0 @@
----
-- name: Install Jenkins on Linux
-  include_tasks: install_linux.yml
-  when: ansible_os_family == 'Debian'
-
