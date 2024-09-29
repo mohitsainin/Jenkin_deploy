@@ -8,7 +8,7 @@ pipeline {
     stages { 
         stage('git checkout') { 
           steps {  
-            checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/HarshitSingh-Codes/jenkins-terraform.git']])            } 
+            checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/mohitsainin/Jenkin_deploy.git']])            } 
         } 
         stage('terraform init'){ 
             steps { 
