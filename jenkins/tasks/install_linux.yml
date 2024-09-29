@@ -1,0 +1,52 @@
+---
+- name: Ensure required packages are installed (Debian)
+  apt:
+    name:
+      - wget
+    state: present
+
+- name: Download Jenkins GPG key
+  ansible.builtin.get_url:
+    url: "{{ jenkins_gpg_key }}"
+    dest: /tmp/jenkins_gpg.key
+    mode: '0644'
+
+- name: Add Jenkins GPG key
+  command: "gpg --no-default-keyring --keyring /etc/apt/trusted.gpg.d/jenkins.gpg --import /tmp/jenkins_gpg.key"
+
+- name: Add Jenkins repository (Debian)
+  template:
+    src: jenkins.repo.j2
+    dest: /etc/apt/sources.list.d/jenkins.list
+
+- name: Update apt package cache
+  apt:
+    update_cache: yes
+
+- name: Install required packages (Debian)
+  apt:
+    name: 
+      - openjdk-17-jre
+      - fontconfig
+    state: present
+
+- name: Install Jenkins (Debian)
+  apt:
+    name: jenkins
+    state: present
+  notify: start jenkins
+
+- name: Start Jenkins service
+  service:
+    name: jenkins
+    state: started
+    enabled: yes
+  notify: start jenkins
+
+- name: Display initial Jenkins admin password
+  command: cat /var/lib/jenkins/secrets/initialAdminPassword
+  register: jenkins_admin_password
+
+- name: Print Jenkins initial admin password
+  debug:
+    msg: "Jenkins initial admin password: {{ jenkins_admin_password.stdout }}"

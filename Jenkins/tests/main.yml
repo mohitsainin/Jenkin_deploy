@@ -1,0 +1,7 @@
+---
+- name: Install Jenkins on webserver
+  hosts: web
+  become: true
+  roles:
+    - role: /home/ubuntu/roles/jenkins
+
