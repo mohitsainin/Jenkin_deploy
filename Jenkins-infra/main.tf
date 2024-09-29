@@ -52,7 +52,7 @@ module "route_tables" {
 module "security_group" {
   source              = "./modules/security"
   vpc_id              = module.vpc.vpc_id
-  security_group_name = "Tom-SG"
+  security_group_name = "jenkins-SG"
   ingress_ports       = var.ingress_ports
   egress_ports        = var.egress_ports
 }
@@ -96,5 +96,5 @@ module "alb" {
 # S3 Bucket Module
 module "s3" {
   source      = "./modules/s3"
-  bucket_name = "my-tomcat-test-bucket-69-ninja"
+  bucket_name = "my-jenkins-st-bucket"
 }
