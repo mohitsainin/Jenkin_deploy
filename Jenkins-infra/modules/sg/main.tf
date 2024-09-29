@@ -23,6 +23,6 @@ resource "aws_security_group" "Tom-SG" {
   }
 
   tags = {
-    Name = "Tom-SG"
+    Name = "jenkins-SG"
   }
 }
