@@ -13,84 +13,44 @@ pipeline {
                 git branch: 'main', url: 'https://github.com/mohitsainin/Jenkin_deploy.git'
             }
         }
-        stage('Terraform Init') {
+      stage('Terraform init') {
             steps {
-                // Initialize Terraform
-                sh "cd ${env.TERRAFORM_WORKSPACE} && terraform init"
+                sh 'terraform init -upgrade'
             }
         }
-        stage('Terraform Plan') {
+        stage('Plan') {
             steps {
-                // Run Terraform plan
-                sh "cd ${env.TERRAFORM_WORKSPACE} && terraform plan"
+                sh 'terraform plan -out tfplan'
+                sh 'terraform show -no-color tfplan > tfplan.txt'
             }
         }
-        stage('Approval For Apply') {
-            when {
-                expression { params.ACTION == 'apply' }
-            }
+        stage('Apply / Destroy') {
             steps {
-                // Prompt for approval before applying changes
-                input "Do you want to apply Terraform changes?"
+                script {
+                    if (params.action == 'apply') {
+                        if (!params.autoApprove) {
+                            def plan = readFile 'tfplan.txt'
+                            input message: "Do you want to apply the plan?",
+                            parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
+                        }
+                        sh 'terraform apply -input=false tfplan'
+                    } else if (params.action == 'destroy') {
+                        sh 'terraform destroy --auto-approve'
+                    } else {
+                        error "Invalid action selected. Please choose either 'apply' or 'destroy'."
+                    }
+                }
             }
         }
-        stage('Terraform Apply') {
-            when {
-                expression { params.ACTION == 'apply' }
-            }
+        stage('Run Ansible Playbook') {
             steps {
-                // Run Terraform apply
-                sh """
-                cd ${env.TERRAFORM_WORKSPACE}
-                terraform apply -auto-approve
-                mkdir -p ${env.INSTALL_WORKSPACE}  # Create the directory if it doesn't exist
-                sudo cp ${env.TERRAFORM_WORKSPACE}/ansible.pem ${env.INSTALL_WORKSPACE}/
-                sudo chown jenkins:jenkins ${env.INSTALL_WORKSPACE}/ansible.pem
-                sudo chmod 400 ${env.INSTALL_WORKSPACE}/ansible.pem
-                """
-            }
-        }
-        stage('Approval for Destroy') {
-            when {
-                expression { params.ACTION == 'destroy' }
-            }
-            steps {
-                // Prompt for approval before destroying resources
-                input "Do you want to Terraform Destroy?"
-            }
-        }
-        stage('Terraform Destroy') {
-            when {
-                expression { params.ACTION == 'destroy' }
-            }
-            steps {
-                // Destroy Infra
-                sh "cd ${env.TERRAFORM_WORKSPACE} && terraform destroy -auto-approve"
-            }
-        }
-        stage('Tool Deploy') {
-            when {
-                expression { params.ACTION == 'apply' }
-            }
-            steps {
-                sshagent(['ansible.pem']) {
-                    script {
-                        sh '''
-                            ansible-playbook -i aws_ec2.yml playbook.yml
-                        '''                               
-                    }   
+                dir('/var/lib/jenkins/workspace/jenkins_Automation') {
+                    sh 'pwd'
+                sh 'ansible-playbook -i aws_ce2.yml test.yml'
+                    
                 }
             }
         }
     }
-    post {
-        success {
-            // Actions to take if the pipeline is successful
-            echo 'Succeeded!'
-        }
-        failure {
-            // Actions to take if the pipeline fails
-            echo 'Failed!'
-        }
-    }
 }
+     
