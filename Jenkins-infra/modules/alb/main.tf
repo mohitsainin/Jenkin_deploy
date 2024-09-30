@@ -18,7 +18,7 @@ resource "aws_lb_target_group" "jenkins_tg" {
 
 # Listener for the ALB
 resource "aws_lb_listener" "alb" {
-  load_balancer_arn = aws_lb.tomcat_lb.arn
+  load_balancer_arn = aws_lb.jenkins_lb.arn
   port              = var.listener_port
   protocol          = "HTTP"
 
