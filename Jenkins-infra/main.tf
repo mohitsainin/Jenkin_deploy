@@ -17,7 +17,7 @@ module "subnets" {
 
 # Internet Gateway Module
 module "internet_gateway" {
-  source = "./modules/IGW"
+  source = "./modules/igw"
   vpc_id = module.vpc.vpc_id
   tags   = var.tags
 }
@@ -31,7 +31,7 @@ resource "aws_eip" "nat" {
 
 # NAT Gateway Module
 module "nat_gateway" {
-  source            = "./modules/NAT"
+  source            = "./modules/nat"
   eip_allocation_id = aws_eip.nat.id
   subnet_id         = module.subnets.public_subnet_ids[0]
   tags              = var.tags
@@ -50,7 +50,7 @@ module "route_tables" {
 
 
 module "security_group" {
-  source              = "./modules/security"
+  source              = "./modules/sg"
   vpc_id              = module.vpc.vpc_id
   security_group_name = "jenkins-SG"
   ingress_ports       = var.ingress_ports
@@ -71,7 +71,7 @@ module "instance" {
 
 # Auto Scaling Group Module
 module "auto_scaling" {
-  source            = "./modules/auto_scaling"
+  source            = "./modules/asg"
   ami_id            = var.ami_id
   instance_type     = var.instance_type
   key_name          = var.key_name
