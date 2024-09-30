@@ -1,4 +1,4 @@
-resource "aws_security_group" "Tom-SG" {
+resource "aws_security_group" "jenkins-SG" {
   vpc_id = var.vpc_id
   name   = var.security_group_name
 
