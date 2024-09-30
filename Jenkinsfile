@@ -13,29 +13,35 @@ pipeline {
                 git branch: 'main', url: 'https://github.com/mohitsainin/Jenkin_deploy.git'
             }
         }
-      stage('Terraform init') {
+        stage('Terraform init') {
             steps {
-                sh 'terraform init -upgrade'
+                dir("${TERRAFORM_WORKSPACE}") {
+                    sh 'terraform init -upgrade'
+                }
             }
         }
         stage('Plan') {
             steps {
-                sh 'terraform plan -out tfplan'
-                sh 'terraform show -no-color tfplan > tfplan.txt'
+                dir("${TERRAFORM_WORKSPACE}") {
+                    sh 'terraform plan -out tfplan'
+                    sh 'terraform show -no-color tfplan > tfplan.txt'
+                }
             }
         }
         stage('Apply / Destroy') {
             steps {
                 script {
-                    if (params.action == 'apply') {
-                        if (!params.autoApprove) {
-                            def plan = readFile 'tfplan.txt'
-                            input message: "Do you want to apply the plan?",
-                            parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
+                    if (params.ACTION == 'apply') {
+                        def plan = readFile("${TERRAFORM_WORKSPACE}/tfplan.txt")
+                        input message: "Do you want to apply the plan?",
+                        parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
+                        dir("${TERRAFORM_WORKSPACE}") {
+                            sh 'terraform apply -input=false tfplan'
                         }
-                        sh 'terraform apply -input=false tfplan'
-                    } else if (params.action == 'destroy') {
-                        sh 'terraform destroy --auto-approve'
+                    } else if (params.ACTION == 'destroy') {
+                        dir("${TERRAFORM_WORKSPACE}") {
+                            sh 'terraform destroy --auto-approve'
+                        }
                     } else {
                         error "Invalid action selected. Please choose either 'apply' or 'destroy'."
                     }
@@ -44,13 +50,10 @@ pipeline {
         }
         stage('Run Ansible Playbook') {
             steps {
-                dir('/var/lib/jenkins/workspace/jenkins_Automation') {
-                    sh 'pwd'
-                sh 'ansible-playbook -i aws_ce2.yml test.yml'
-                    
+                dir("${INSTALL_WORKSPACE}") {
+                    sh 'ansible-playbook -i aws_ce2.yml test.yml'
                 }
             }
         }
     }
 }
-     
