@@ -1,7 +1,0 @@
-- name: Deploy Jenkins using Ansible Role
-  hosts: aws_ec2
-  become: yes
-  roles:
-    - role: Jenkins-deploy/Jenkins
-      jenkins_group: "Jenkins"
-      jenkins_user: "jenkins"
