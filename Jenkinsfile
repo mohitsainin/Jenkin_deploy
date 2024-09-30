@@ -1,141 +1,96 @@
-pipeline { 
-    agent any 
+pipeline {
+    agent any
     parameters {
         choice(name: 'ACTION', choices: ['apply', 'destroy'], description: 'Select action: apply or destroy')
-        choice(name: 'TAGS', choices: ['install', 'uninstall'], description: 'Select tags: install or uninstall')
-        choice(name: 'OS', choices: ['ubuntu', 'redhat'], description: 'Select OS family: ubuntu or redhat')
     }
-    stages { 
-        stage('git checkout') { 
-          steps {  
-            checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/mohitsainin/Jenkin_deploy.git']])            } 
-        } 
-        stage('terraform init'){ 
-            steps { 
-                sh 'terraform init'  
-            } 
-        } 
-        stage('terraform plan'){ 
-            steps { 
-                sh 'terraform plan'  
-            } 
+    environment {
+        TERRAFORM_WORKSPACE = "/var/lib/jenkins/workspace/tool_deploy/Jenkins-infra/"
+        INSTALL_WORKSPACE = "/var/lib/jenkins/workspace/tool_deploy/Jenkins/"
+    }
+    stages {
+        stage('Clone Repository') {
+            steps {
+                git branch: 'main', url: 'https://github.com/mohitsainin/Jenkin_deploy.git'
+            }
         }
-        stage('apply Approval'){ 
+        stage('Terraform Init') {
+            steps {
+                // Initialize Terraform
+                sh "cd ${env.TERRAFORM_WORKSPACE} && terraform init"
+            }
+        }
+        stage('Terraform Plan') {
+            steps {
+                // Run Terraform plan
+                sh "cd ${env.TERRAFORM_WORKSPACE} && terraform plan"
+            }
+        }
+        stage('Approval For Apply') {
             when {
                 expression { params.ACTION == 'apply' }
             }
-            steps { 
-                input message: 'Verify infra. plan before appliction?', ok: 'Yes' 
-            } 
-        } 
-        stage('terraform apply'){
-            when {
-                expression { params.ACTION == 'apply' }
-            } 
-            steps { 
-                sh 'terraform apply --auto-approve' 
-                sh 'terraform output '     
-            } 
-
+            steps {
+                // Prompt for approval before applying changes
+                input "Do you want to apply Terraform changes?"
+            }
         }
-        stage('Store EFS and ALB DNS Name'){
+        stage('Terraform Apply') {
             when {
                 expression { params.ACTION == 'apply' }
             }
-            steps{
+            steps {
+                // Run Terraform apply
+                sh """
+                cd ${env.TERRAFORM_WORKSPACE}
+                terraform apply -auto-approve
+                mkdir -p ${env.INSTALL_WORKSPACE}  # Create the directory if it doesn't exist
+                sudo cp ${env.TERRAFORM_WORKSPACE}/jenkins-1-key.pem ${env.INSTALL_WORKSPACE}/
+                sudo chown jenkins:jenkins ${env.INSTALL_WORKSPACE}/jenkins-1-key.pem
+                sudo chmod 400 ${env.INSTALL_WORKSPACE}/jenkins-1-key.pem
+                """
+            }
+        }
+        stage('Approval for Destroy') {
+            when {
+                expression { params.ACTION == 'destroy' }
+            }
+            steps {
+                // Prompt for approval before destroying resources
+                input "Do you want to Terraform Destroy?"
+            }
+        }
+        stage('Terraform Destroy') {
+            when {
+                expression { params.ACTION == 'destroy' }
+            }
+            steps {
+                // Destroy Infra
+                sh "cd ${env.TERRAFORM_WORKSPACE} && terraform destroy -auto-approve"
+            }
+        }
+        stage('Tool Deploy') {
+            when {
+                expression { params.ACTION == 'apply' }
+            }
+            steps {
+                sshagent(['tom-1-key.pem']) {
                     script {
-                    def efsDnsName = sh(
-                        returnStdout: true,
-                        script: 'terraform output efs_dns_name').trim()
-                    def albDnsName = sh(
-                        returnStdout: true,
-                        script: 'terraform output jenkins_alb_dns_name').trim()
-                    env.EFS_DNS_NAME = efsDnsName
-                    env.ALB_DNS_NAME = albDnsName
-                    }
-                    
+                        sh '''
+                            ansible-playbook -i aws_ec2.yml playbook.yml
+                        '''                               
+                    }   
                 }
-        }
-        stage('Print DNS Name'){
-            when {
-                expression { params.ACTION == 'apply' }
-            }
-            steps{
-                    sh """
-                        echo ${env.EFS_DNS_NAME} 
-                        echo ${env.ALB_DNS_NAME}
-                    """
-                }
-        }
-
-        stage('Running Ansible') {
-            when {
-                expression { params.ACTION == 'apply' }
-            }
-            parallel {
-                stage('Ansible Graph') {                  
-                    steps {
-                        sh "ansible-inventory --graph"
-                    }
-                }
-                stage('Install Jenkins On Ubuntu') {
-                    when {
-                        expression { 
-                            params.TAGS == 'install' && (params.OS == 'ubuntu') 
-                        }
-                    }                    
-                    steps {
-                        sh "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -u ubuntu  ${WORKSPACE}/master.yml --extra-vars \"efs_mount_point=${env.EFS_DNS_NAME}\" --tags \"install\"" 
-                    }
-                }
-                stage('Uninstall Jenkins On Ubuntu') {
-                    when {
-                        expression { 
-                            params.TAGS == 'uninstall' && (params.OS == 'ubuntu') 
-                        }
-                    }  
-                    steps {
-                        sh "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -u ubuntu  ${WORKSPACE}/master.yml --extra-vars \"efs_mount_point=${env.EFS_DNS_NAME}\" --tags \"uninstall\"" 
-                    }
-                }
-                stage('Install Jenkins On RedHat') {
-                    when {
-                        expression { 
-                            params.TAGS == 'install' && (params.OS == 'redhat') 
-                        }
-                    }  
-                    steps {
-                        sh "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -u ec2-user  ${WORKSPACE}/master.yml --extra-vars \"efs_mount_point=${env.EFS_DNS_NAME}\" --tags \"install\"" 
-                    }
-                }
-                stage('Uninstall Jenkins On RedHat') {
-                    when {
-                        expression { 
-                            params.TAGS == 'uninstall' && (params.OS == 'redhat') 
-                        }
-                    }  
-                    steps {
-                        sh "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -u ec2-user  ${WORKSPACE}/master.yml --extra-vars \"efs_mount_point=${env.EFS_DNS_NAME}\" --tags \"uninstall\"" 
-                    }
-                }
-
             }
         }
-        stage('destroy Approval'){ 
-            when {
-                expression { params.ACTION == 'destroy' }
-            }
-            steps { 
-                input message: 'Do you want to destroy the applied infra?', ok: 'Yes' 
-            } 
-        } 
-        stage('terraform destroy'){ 
-            when {
-                expression { params.ACTION == 'destroy' }
-            }
-            steps { 
-                sh 'terraform destroy --auto-approve'  
-            } 
+    }
+    post {
+        success {
+            // Actions to take if the pipeline is successful
+            echo 'Succeeded!'
         }
-    } 
+        failure {
+            // Actions to take if the pipeline fails
+            echo 'Failed!'
+        }
+    }
 }
