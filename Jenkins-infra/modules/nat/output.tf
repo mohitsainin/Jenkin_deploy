@@ -1,3 +1,3 @@
 output "nat_gateway" {
-  value = aws_nat_gateway.NAT.id
+  value = aws_nat_gateway.nat.id
 }
