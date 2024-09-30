@@ -60,7 +60,7 @@ module "security_group" {
 
 # EC2 Instance Module
 module "instance" {
-  source           = "./modules/instance"
+  source           = "./modules/ec2"
   ami              = var.ami_id
   instance_type    = var.instance_type
   subnet_id        = module.subnets.public_subnet_ids[0]
