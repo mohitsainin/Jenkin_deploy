@@ -13,47 +13,84 @@ pipeline {
                 git branch: 'main', url: 'https://github.com/mohitsainin/Jenkin_deploy.git'
             }
         }
-        stage('Terraform init') {
+         stage('Terraform Init') {
             steps {
-                dir("${TERRAFORM_WORKSPACE}") {
-                    sh 'terraform init -upgrade'
-                }
+                // Initialize Terraform
+                sh "cd ${env.TERRAFORM_WORKSPACE} && terraform init"
             }
         }
-        stage('Plan') {
+        stage('Terraform Plan') {
             steps {
-                dir("${TERRAFORM_WORKSPACE}") {
-                    sh 'terraform plan -out tfplan'
-                    sh 'terraform show -no-color tfplan > tfplan.txt'
-                }
+                // Run Terraform plan
+                sh "cd ${env.TERRAFORM_WORKSPACE} && terraform plan"
             }
         }
-        stage('Apply / Destroy') {
+        stage('Approval For Apply') {
+            when {
+                expression { params.ACTION == 'apply' }
+            }
             steps {
-                script {
-                    if (params.ACTION == 'apply') {
-                        def plan = readFile("${TERRAFORM_WORKSPACE}/tfplan.txt")
-                        input message: "Do you want to apply the plan?",
-                        parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
-                        dir("${TERRAFORM_WORKSPACE}") {
-                            sh 'terraform apply -input=false tfplan'
-                        }
-                    } else if (params.ACTION == 'destroy') {
-                        dir("${TERRAFORM_WORKSPACE}") {
-                            sh 'terraform destroy --auto-approve'
-                        }
-                    } else {
-                        error "Invalid action selected. Please choose either 'apply' or 'destroy'."
+                // Prompt for approval before applying changes
+                input "Do you want to apply Terraform changes?"
+            }
+        }
+        stage('Terraform Apply') {
+            when {
+                expression { params.ACTION == 'apply' }
+            }
+            steps {
+                // Run Terraform apply
+                sh """
+                cd ${env.TERRAFORM_WORKSPACE}
+                terraform apply -auto-approve
+                mkdir -p ${env.INSTALL_WORKSPACE} 
+                sudo cp ${env.TERRAFORM_WORKSPACE}/tom-1-key.pem ${env.INSTALL_WORKSPACE}/
+                sudo chown jenkins:jenkins ${env.INSTALL_WORKSPACE}/ansible.pem
+                sudo chmod 400 ${env.INSTALL_WORKSPACE}/ansible.pem
+                """
+            }
+        }
+        stage('Approval for Destroy') {
+            when {
+                expression { params.ACTION == 'destroy' }
+            }
+            steps {
+                // Prompt for approval before destroying resources
+                input "Do you want to Terraform Destroy?"
+            }
+        }
+        stage('Terraform Destroy') {
+            when {
+                expression { params.ACTION == 'destroy' }
+            }
+            steps {
+                // Destroy Infra
+                sh "cd ${env.TERRAFORM_WORKSPACE} && terraform destroy -auto-approve"
+            }
+        }
+        stage('Tool Deploy') {
+            when {
+                expression { params.ACTION == 'apply' }
+            }
+            steps {
+                sshagent(['ansible.pem']) {
+                    script {
+                        sh '''
+                            ansible-playbook -i aws_ec2.yml playbook.yml
+                        '''
                     }
                 }
             }
         }
-        stage('Run Ansible Playbook') {
-            steps {
-                dir("${INSTALL_WORKSPACE}") {
-                    sh 'ansible-playbook -i aws_ce2.yml playbook.yml'
-                }
-            }
+    }
+    post {
+        success {
+            // Actions to take if the pipeline is successful
+            echo 'Succeeded!'
+        }
+        failure {
+            // Actions to take if the pipeline fails
+            echo 'Failed!'
         }
     }
 }
