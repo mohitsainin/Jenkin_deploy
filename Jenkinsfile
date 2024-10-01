@@ -16,13 +16,13 @@ pipeline {
          stage('Terraform Init') {
             steps {
                 // Initialize Terraform
-                sh "cd ${env.TERRAFORM_WORKSPACE} && terraform init"
+                sh "cd ${env.TERRAFORM_WORKSPACE} && sudo terraform init"
             }
         }
         stage('Terraform Plan') {
             steps {
                 // Run Terraform plan
-                sh "cd ${env.TERRAFORM_WORKSPACE} && terraform plan"
+                sh "cd ${env.TERRAFORM_WORKSPACE} && sudo terraform plan"
             }
         }
         stage('Approval For Apply') {
@@ -65,7 +65,7 @@ pipeline {
             }
             steps {
                 // Destroy Infra
-                sh "cd ${env.TERRAFORM_WORKSPACE} && terraform destroy -auto-approve"
+                sh "cd ${env.TERRAFORM_WORKSPACE} && sudo terraform destroy -auto-approve"
             }
         }
         stage('Tool Deploy') {
