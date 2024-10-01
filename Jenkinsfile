@@ -51,7 +51,7 @@ pipeline {
         stage('Run Ansible Playbook') {
             steps {
                 dir("${INSTALL_WORKSPACE}") {
-                    sh 'ansible-playbook -i aws_ce2.yml test.yml'
+                    sh 'ansible-playbook -i aws_ce2.yml playbook.yml'
                 }
             }
         }
