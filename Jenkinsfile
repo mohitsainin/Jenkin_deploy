@@ -22,7 +22,7 @@ pipeline {
         stage('Terraform Plan') {
             steps {
                 // Run Terraform plan
-                sh "cd ${env.TERRAFORM_WORKSPACE} sudo terraform plan"
+                sh "cd ${env.TERRAFORM_WORKSPACE} terraform plan"
             }
         }
         stage('Approval For Apply') {
