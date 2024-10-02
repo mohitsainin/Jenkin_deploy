@@ -43,7 +43,7 @@ variable "subnet_id" {
 }
 
 variable "key_name" {
-  default = "ansible-key"
+  default = "ansible"
 }
 
 variable "security_group_name" {
