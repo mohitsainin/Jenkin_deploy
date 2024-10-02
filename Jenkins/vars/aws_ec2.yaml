@@ -4,8 +4,8 @@ regions:
    - us-east-1
 filters:
   tag:Name:
-    - "TomcatInstance"
-    - "TomcatInstance"
+    - "jenkinsInstance"
+    - "jenkinsInstance"
 compose:
    ansible_host: public_ip_address  # For public instances
    ansible_host: private_ip_address  # Uncomment if using private instances
