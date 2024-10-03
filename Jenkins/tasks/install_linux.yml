@@ -36,22 +36,54 @@
     state: present
   notify: start jenkins
 
-- name: Start Jenkins service
-  service:
+- name: Stopping Jenkins service
+  ansible.builtin.service:
+    name: jenkins
+    state: stopped
+
+- name: Moving Jenkins data to new directory
+  copy: src=/var/lib/jenkins/ dest={{ jenkins_data_dir }} remote_src=yes directory_mode=yes
+  ignore_errors: true
+- name: Change directory owner
+  file:
+    path: "{{ jenkins_data_dir }}"
+    owner: jenkins
+    group: jenkins
+    recurse: yes
+
+- name: Remove old Jenkins data directory
+  file:
+    path: /var/lib/jenkins/
+    state: absent
+  ignore_errors: true
+- name: Create override directory for Jenkins service
+  become: true
+  file:
+    path: /etc/systemd/system/jenkins.service.d
+    state: directory
+
+- name: Add override file for Jenkins
+  template:
+    src: override.conf.j2
+    dest: /etc/systemd/system/jenkins.service.d/override.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Reload systemd daemon configuration
+  systemd:
+    daemon_reload: yes
+
+- name: Start Jenkins Service
+  ansible.builtin.service:
     name: jenkins
     state: started
-    enabled: yes
-  notify: start jenkins
 
-- name: Fetch Jenkins Initial Admin Password
-  hosts: JenkinsInstance
-  gather_facts: false
-  tasks:
-    - name: Retrieve Jenkins Initial Admin Password
-      command: sudo cat /var/lib/jenkins/secrets/initialAdminPassword
-      register: jenkins_initial_password
-      become: true  # This will use sudo
+- name: Register passwd
+  ansible.builtin.command:
+    cmd: cat /data/jenkins/secrets/initialAdminPassword
+  register: intialPasswd
 
-    - name: Print Jenkins Initial Admin Password
-      debug:
-        msg: "Jenkins Initial Admin Password: {{ jenkins_initial_password.stdout }}"
+- name: Display passwd
+  ansible.builtin.debug:
+    var: intialPasswd.stdout_lines
