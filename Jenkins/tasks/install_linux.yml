@@ -36,6 +36,12 @@
     state: present
   notify: start jenkins
 
+- name: Wait for initialAdminPassword file to be created
+  wait_for:
+    path: "{{ jenkins_data_dir }}/secrets/initialAdminPassword"
+    state: present
+    timeout: 180
+    
 - name: Stopping Jenkins service
   ansible.builtin.service:
     name: jenkins
