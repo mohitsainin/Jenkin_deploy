@@ -1,47 +1,36 @@
 ---
-- name: Ensure required packages are installed (Debian)
-  apt:
-    name:
-      - wget
-    state: present
+- name: Include OS-Specific variables
+  ansible.builtin.include_vars:
+    file: "{{ ansible_os_family }}.yml"
 
-- name: Download Jenkins GPG key
-  ansible.builtin.get_url:
-    url: "{{ jenkins_gpg_key }}"
-    dest: /tmp/jenkins_gpg.key
-    mode: '0644'
-
-- name: Add Jenkins GPG key
-  command: "gpg --no-default-keyring --keyring /etc/apt/trusted.gpg.d/jenkins.gpg --import /tmp/jenkins_gpg.key"
-
-- name: Add Jenkins repository (Debian)
-  template:
-    src: jenkins.repo.j2
-    dest: /etc/apt/sources.list.d/jenkins.list
-
-- name: Update apt package cache
+- name: Update apt cache
   apt:
     update_cache: yes
 
-- name: Install required packages (Debian)
-  apt:
-    name: 
-      - openjdk-17-jre
-      - fontconfig
+- name: Install Java package (Ubuntu/Debian)
+  ansible.builtin.apt:
+    name: "{{ java_apt_package }}"
+    state: present
+    update_cache: true
+# when: ansible_os_family == 'Debian'
+
+- name: Add Jenkins apt key in system.
+  ansible.builtin.apt_key:
+    url: "{{ jenkins_repo_key_url }}"
     state: present
 
-- name: Install Jenkins (Debian)
-  apt:
-    name: jenkins
+- name: Add Jenkins apt repository.
+  ansible.builtin.apt_repository:
+    repo: "{{ jenkins_repo_url }}"
     state: present
-  notify: start jenkins
+    update_cache: true
 
-- name: Wait for initialAdminPassword file to be created
-  wait_for:
-    path: "{{ jenkins_data_dir }}/secrets/initialAdminPassword"
+- name: Download specific Jenkins version.
+  ansible.builtin.apt:
+    name: jenkins={{ jenkins_version }}
     state: present
-    timeout: 180
-    
+    update_cache: true
+
 - name: Stopping Jenkins service
   ansible.builtin.service:
     name: jenkins
@@ -93,3 +82,4 @@
 - name: Display passwd
   ansible.builtin.debug:
     var: intialPasswd.stdout_lines
+
