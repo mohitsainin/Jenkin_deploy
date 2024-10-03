@@ -43,10 +43,15 @@
     enabled: yes
   notify: start jenkins
 
-- name: Display initial Jenkins admin password
-  command: cat /var/lib/jenkins/secrets/initialAdminPassword
-  register: jenkins_admin_password
+- name: Fetch Jenkins Initial Admin Password
+  hosts: JenkinsInstance
+  gather_facts: false
+  tasks:
+    - name: Retrieve Jenkins Initial Admin Password
+      command: sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+      register: jenkins_initial_password
+      become: true  # This will use sudo
 
-- name: Print Jenkins initial admin password
-  debug:
-    msg: "Jenkins initial admin password: {{ jenkins_admin_password.stdout }}"
+    - name: Print Jenkins Initial Admin Password
+      debug:
+        msg: "Jenkins Initial Admin Password: {{ jenkins_initial_password.stdout }}"
