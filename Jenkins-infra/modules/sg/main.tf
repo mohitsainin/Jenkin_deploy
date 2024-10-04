@@ -1,5 +1,5 @@
 data "aws_security_group" "default_sg" {
-  vpc_id = var.vpc_id-01
+  vpc_id = var.vpc_id
   filter {
     name = "group-name"
     values = ["default"]
