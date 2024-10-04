@@ -1,10 +1,3 @@
-{% if ansible_os_family == 'Debian' %}
-deb [signed-by={{ jenkins_gpg_dest }}] {{ jenkins_repo_url }} binary/
-{% elif ansible_os_family == 'RedHat' %}
-[jenkins]
-name=Jenkins
-baseurl={{ jenkins_repo_url }}
-gpgcheck=1
-gpgkey={{ jenkins_gpg_dest }}
-enabled=1
-{% endif %}
+[Service]
+Environment="JENKINS_HOME={{ jenkins_data_dir }}"
+WorkingDirectory={{ jenkins_data_dir }}
