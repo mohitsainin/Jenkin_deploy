@@ -22,3 +22,10 @@ variable "tags" {
   type    = map(string)
   default = {}
 }
+variable "default_vpc_cidr" {
+  type = string
+}
+
+variable "vpc_peering_id" {
+  type = string
+}
