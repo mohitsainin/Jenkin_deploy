@@ -12,8 +12,13 @@ resource "aws_route_table_association" "public" {
   count          = length(var.public_subnet_ids)
   subnet_id      = element(var.public_subnet_ids, count.index)
   route_table_id = aws_route_table.public.id
-}
 
+}
+resource "aws_route" "RT-1" {
+  route_table_id = aws_route_table.public.id
+  destination_cidr_block = var.default_vpc_cidr
+  vpc_peering_connection_id = var.vpc_peering_id
+}
 
 
 # Private Route Table and Routes
@@ -31,4 +36,9 @@ resource "aws_route_table_association" "private" {
   count          = length(var.private_subnet_ids)
   subnet_id      = element(var.private_subnet_ids, count.index)
   route_table_id = aws_route_table.private.id
+}
+resource "aws_route" "RT-2" {
+  route_table_id = aws_route_table.private.id
+  destination_cidr_block = var.default_vpc_cidr
+  vpc_peering_connection_id = var.vpc_peering_id
 }
