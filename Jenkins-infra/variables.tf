@@ -1,5 +1,5 @@
 # VPC Configuration
-variable "cidr_block" {
+variable "vpc_cidr" {
   default = "172.16.0.0/22"
 }
 
@@ -111,4 +111,8 @@ variable "port" {
 
 variable "listener_port" {
   default = "80"
+}
+variable "default_vpc_cidr" {
+  type = string
+  default = "172.31.0.0/16"
 }
