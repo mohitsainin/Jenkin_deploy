@@ -1,7 +1,7 @@
 # VPC Module
 module "vpc" {
   source      = "./modules/vpc"
-  cidr_block  = var.cidr_block
+  vpc_cidr =   var.vpc_cidr
   vpc_name    = var.aws_vpc
 }
 
@@ -46,6 +46,8 @@ module "route_tables" {
   public_subnet_ids   = module.subnets.public_subnet_ids
   private_subnet_ids  = module.subnets.private_subnet_ids
   tags                = var.tags
+  vpc_peering_id = module.vpc_peering.vpc_peering_id
+  default_vpc_cidr = module.vpc.vpc_cidr
 }
 
 
@@ -97,4 +99,10 @@ module "alb" {
 module "s3" {
   source      = "./modules/s3"
   bucket_name = "my-jenkins-st-bucket"
+}
+
+module "vpc_peering" {
+  source = "./modules/vpc_peering"
+  vpc_id = module.vpc.vpc_id
+vpc_cidr = module.vpc.vpc_cidr
 }
