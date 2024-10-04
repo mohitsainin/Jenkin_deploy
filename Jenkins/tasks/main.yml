@@ -1,5 +1,8 @@
 ---
-- name: Install Jenkins on Linux
-  include_tasks: install_linux.yml
-  when: ansible_os_family == 'Debian'
-
+- name: Installing Jenkins in Ubuntu OS
+  ansible.builtin.import_tasks: Debian-install.yml
+  when: ansible_os_family == "Debian"
+  tags:
+    - install
+    - never
+# or (jenkins_install_both == "yes")
