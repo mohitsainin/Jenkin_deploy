@@ -2,8 +2,8 @@ output "vpc_id" {
   value = module.vpc.vpc_id
 }
 
-output "vpc_cidr_block" {
-  value = module.vpc.vpc_cidr_block
+output "vpc_cidr" {
+  value = module.vpc.vpc_cidr
 }
 
 output "public_subnet_ids" {
@@ -53,3 +53,4 @@ output "bucket_id" {
 output "bucket_versioning_status" {
   value = module.s3.bucket_versioning_status
 }
+
