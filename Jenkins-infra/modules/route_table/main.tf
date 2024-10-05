@@ -16,7 +16,7 @@ resource "aws_route_table_association" "public" {
 }
 resource "aws_route" "RT-1" {
   route_table_id = aws_route_table.public.id
-  destination_cidr_block = var.default_vpc_cidr
+  destination_cidr_block = "172.16.0.0/16"
   vpc_peering_connection_id = var.vpc_peering_id
 }
 
@@ -39,6 +39,6 @@ resource "aws_route_table_association" "private" {
 }
 resource "aws_route" "RT-2" {
   route_table_id = aws_route_table.private.id
-  destination_cidr_block = var.default_vpc_cidr
+  destination_cidr_block = "172.31.0.0/16"
   vpc_peering_connection_id = var.vpc_peering_id
 }
