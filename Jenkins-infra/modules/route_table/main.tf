@@ -16,7 +16,7 @@ resource "aws_route_table_association" "public" {
 }
 resource "aws_route" "RT-1" {
   route_table_id = aws_route_table.public.id
-  destination_cidr_block = "172.16.0.0/16"
+  destination_cidr_block = "172.31.0.0/16"
   vpc_peering_connection_id = var.vpc_peering_id
 }
 
