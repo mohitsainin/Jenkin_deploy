@@ -7,11 +7,11 @@ pipeline {
         TERRAFORM_WORKSPACE = "/var/lib/jenkins/workspace/Jenkins_deployment/Jenkins-infra/"
         INSTALL_WORKSPACE = "/var/lib/jenkins/workspace/tool_deploy/Jenkins/"
     }
-    stages {
+    stages {   
         stage('Clone Repository') {
             steps {
                 git branch: 'main', url: 'https://github.com/mohitsainin/Jenkin_deploy.git'
-            }
+            } 
         }
          stage('Terraform Init') {
             steps {
