@@ -4,7 +4,7 @@ variable "vpc_cidr" {
 }
 
 variable "aws_vpc" {
-  default = "my-vpc"
+  default = "my-vpc"  
 }
 
 # Subnets Configuration
