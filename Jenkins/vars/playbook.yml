@@ -3,8 +3,8 @@
   hosts: aws_ec2
   become: yes
   roles:
-    - role: Jenkins_deploy/jenkins
-      tomcat_group: "Jenkins"
-      tomcat_user: "jenkins"
+    - role: Jenkins_deploy/jenkins 
+      jenkins_group: "Jenkins" 
+      jenkins_user: "jenkins" 
 
   
