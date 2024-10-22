@@ -4,7 +4,7 @@ module "vpc" {
   vpc_cidr =   var.vpc_cidr
   vpc_name    = var.aws_vpc
 }
-
+  
 # Subnet Module
 module "subnets" {
   source               = "./modules/subnet"
@@ -14,14 +14,14 @@ module "subnets" {
   availability_zones   = var.availability_zones
   tags                 = var.tags
 }
-
+ 
 # Internet Gateway Module
 module "internet_gateway" {
   source = "./modules/igw"
   vpc_id = module.vpc.vpc_id
   tags   = var.tags
 }
-
+ 
 # Elastic IP Resource for NAT Gateway
 resource "aws_eip" "nat" {
   tags = {
@@ -36,7 +36,7 @@ module "nat_gateway" {
   subnet_id         = module.subnets.public_subnet_ids[0]
   tags              = var.tags
 }
-
+ 
 # Route Table Module
 module "route_tables" {
   source              = "./modules/route_table"
@@ -49,7 +49,7 @@ module "route_tables" {
   vpc_peering_id = module.vpc_peering.vpc_peering_id
   default_vpc_cidr = module.vpc.vpc_cidr
 }
-
+ 
 
 module "security_group" {
   source              = "./modules/sg"
@@ -58,8 +58,8 @@ module "security_group" {
   ingress_ports       = var.ingress_ports
   egress_ports        = var.egress_ports
 }
-
-
+ 
+ 
 # EC2 Instance Module
 module "instance" {
   source           = "./modules/ec2"
@@ -69,8 +69,8 @@ module "instance" {
   key_name         = var.key_name
   security_group_id  = module.security_group.security_group_id
 }
-
-
+ 
+ 
 # Auto Scaling Group Module
 module "auto_scaling" {
   source            = "./modules/asg"
@@ -84,7 +84,7 @@ module "auto_scaling" {
   min_size          = var.min_size
   target_group_arn  = module.alb.target_group_arn
 }
-
+ 
 # Application Load Balancer Module
 module "alb" {
   source            = "./modules/alb"
@@ -94,7 +94,7 @@ module "alb" {
   port              = var.port
   listener_port     = var.listener_port
 }
-
+ 
 # S3 Bucket Module
 module "s3" {
   source      = "./modules/s3"
