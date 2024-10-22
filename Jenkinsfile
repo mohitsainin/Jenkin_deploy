@@ -12,7 +12,7 @@ pipeline {
             steps {
                 git branch: 'main', url: 'https://github.com/mohitsainin/Jenkin_deploy.git'
             }   
-        }
+        } 
          stage('Terraform Init') {
             steps {
                 // Initialize Terraform
