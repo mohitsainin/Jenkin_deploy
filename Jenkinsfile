@@ -18,7 +18,7 @@ pipeline {
                 // Initialize Terraform
                 sh "cd ${env.TERRAFORM_WORKSPACE} && terraform init"
             }      
-        }
+        }  
         stage('Terraform Plan') {
             steps {
                 // Run Terraform plan
