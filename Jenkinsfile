@@ -6,7 +6,7 @@ pipeline {
     environment {
         TERRAFORM_WORKSPACE = "/var/lib/jenkins/workspace/Jenkins_deployment/Jenkins-infra/"
         INSTALL_WORKSPACE = "/var/lib/jenkins/workspace/tool_deploy/Jenkins/"
-    }
+    } 
     stages {   
         stage('Clone Repository') {
             steps {
